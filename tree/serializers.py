@@ -3,13 +3,13 @@ from tree.models import Person
 
 
 class PersonSerializer(serializers.ModelSerializer):
-    childs = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = Person
-        fields = ('id', 'name', 'level', 'image', 'childs')
+        fields = ('id', 'name', 'level', 'image', 'children', )
 
-    def get_childs(self, obj):
+    def get_children(self, obj):
         if obj.subfamilies.exists():
             return PersonSerializer(obj.subfamilies.all(), many=True).data
         return []

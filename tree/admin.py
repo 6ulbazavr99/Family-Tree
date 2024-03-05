@@ -1,15 +1,25 @@
 from django.contrib import admin
-from django.contrib.auth.models import User, Group
-from mptt.admin import MPTTModelAdmin
+from mptt.admin import DraggableMPTTAdmin
 from .models import Person
 
 
-class PersonAdmin(MPTTModelAdmin):
-    list_display = ('name', 'parent', 'birthdate')
-    list_filter = ('parent', 'birthdate')
+@admin.register(Person)
+class PersonAdmin(DraggableMPTTAdmin):
+    list_display = ('tree_actions', 'indented_title', 'name', 'parent', 'birthdate')
+    list_display_links = ('indented_title',)
+    list_filter = ('parent', 'birthdate', 'level')
     search_fields = ('name',)
 
+    def indented_title(self, obj):
+        return '--> ' * obj.level + str(obj)
 
-admin.site.register(Person, PersonAdmin)
-admin.site.unregister(User)
-admin.site.unregister(Group)
+    indented_title.short_description = 'Иерархия'
+
+    fieldsets = (
+        (None, {'fields': ('name', 'parent', 'birthdate')}),
+        ('Изображение', {'fields': ('image',), 'classes': ('collapse',)}),
+    )
+
+    readonly_fields = ('indented_title',)
+    verbose_name = 'Семья'
+    verbose_name_plural = 'Семьи'
