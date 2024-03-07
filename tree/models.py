@@ -15,6 +15,7 @@ class Person(MPTTModel):
     )
 
     name = models.CharField(max_length=255, verbose_name=_("Имя"))
+    title = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Заголовок"))
     img = models.ImageField(upload_to='image/', blank=True, null=True, verbose_name=_("Фотография"))
     birthdate = models.DateField(blank=True, null=True, verbose_name=_("Дата рождения"))
 

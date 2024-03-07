@@ -6,3 +6,6 @@ class TreeConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'tree'
     verbose_name = _('Древо')
+
+    def ready(self) -> None:
+        import tree.signals
