@@ -4,7 +4,6 @@ from rest_framework import status
 from .models import Person
 from .serializers import PersonSerializer
 
-
 class TreeView(APIView):
     def get(self, request):
         root_nodes = Person.objects.filter(parent__isnull=True)
@@ -17,7 +16,7 @@ class TreeView(APIView):
                 max_descendants_node = node
         if max_descendants_node:
             serialized_tree = self.serialize_tree(max_descendants_node)
-            return Response(serialized_tree, status=status.HTTP_200_OK)
+            return Response([serialized_tree], status=status.HTTP_200_OK)
         else:
             return Response({'detail': 'Древо не найдено'}, status=status.HTTP_404_NOT_FOUND)
 
