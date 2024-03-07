@@ -6,19 +6,20 @@ from django.contrib import admin
 from django.urls import path
 from tree.views import TreeView
 
+
 schema_view = get_schema_view(
     openapi.Info(
-        title="Tree",
-        default_version='v1',
+        title="Семейное древо",
+        default_version='v2',
     )
 )
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/v1/tree/', TreeView.as_view(), name='person-list'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('tree/', TreeView.as_view(), name='family-list'),
 
 ]
 

@@ -1,15 +1,10 @@
-# models.py
 from django.db import models
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 from django.utils.translation import gettext_lazy as _
 
-class Person(MPTTModel):
-    GENDER_CHOICES = [
-        ('male', _('Мужской')),
-        ('female', _('Женский')),
-    ]
 
+class Person(MPTTModel):
     parent = TreeForeignKey(
         'self',
         on_delete=models.CASCADE,
@@ -20,14 +15,20 @@ class Person(MPTTModel):
     )
 
     name = models.CharField(max_length=255, verbose_name=_("Имя"))
-    image = models.ImageField(upload_to='image/', blank=True, null=True, verbose_name=_("Фотография"))
+    img = models.ImageField(upload_to='image/', blank=True, null=True, verbose_name=_("Фотография"))
     birthdate = models.DateField(blank=True, null=True, verbose_name=_("Дата рождения"))
-    generation = models.IntegerField(default=0, verbose_name=_("Поколение"))
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, verbose_name=_("Пол"))
-    
-    # Добавим новые поля mid и fid
-    mid = models.IntegerField(blank=True, null=True, verbose_name=_("ID мамы"))
-    fid = models.IntegerField(blank=True, null=True, verbose_name=_("ID папы"))
+
+    GENDER_CHOICES = [
+        ('male', _('Мужской')),
+        ('female', _('Женский'))
+    ]
+    gender = models.CharField(_('Пол'), max_length=10, choices=GENDER_CHOICES, blank=True)
+
+    pids = models.ManyToManyField('Person', related_name='person_pids', blank=True, verbose_name=_('Партнер'))
+    fid = models.ForeignKey('Person', null=True, blank=True, verbose_name=_('Отец'), on_delete=models.SET_NULL,
+                            related_name='person_fids')
+    mid = models.ForeignKey('Person', null=True, blank=True, verbose_name=_('Мать'), on_delete=models.SET_NULL,
+                            related_name='person_mids')
 
     def __str__(self):
         return self.name
