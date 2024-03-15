@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'mptt',
     'drf_yasg',
+    'import_export',
 
     # my_apps
     'tree'

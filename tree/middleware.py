@@ -1,6 +1,7 @@
 from django.http import HttpResponseNotFound
 from django.template import loader
 
+
 class Custom404Middleware:
     def __init__(self, get_response):
         self.get_response = get_response

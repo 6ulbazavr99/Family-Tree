@@ -3,6 +3,9 @@ from mptt.admin import DraggableMPTTAdmin
 from .models import Person
 from django.core.exceptions import ValidationError
 from django import forms
+from import_export.admin import ImportExportModelAdmin
+from .resources import PersonResource
+from django.contrib.auth.models import Group, User
 
 
 class PersonForm(forms.ModelForm):
@@ -28,25 +31,27 @@ class PersonAdminMixin:
     def indented_title(self, obj):
         parent_name = obj.parent.name if obj.parent else ''
         if parent_name:
-            return f"{parent_name} --> {obj.name}"
+            depth = obj.level
+            arrow = '--> ' * depth
+            return f"{arrow} {obj.name}"
         else:
             return obj.name
-
     indented_title.short_description = 'Иерархия'
+
 
     def get_pids(self, obj):
         return ', '.join([str(pid) for pid in obj.pids.all()])
 
-    get_pids.short_description = 'Партнеры'
 
+    get_pids.short_description = 'Партнеры'
     fieldsets = (
         ('Иерархия', {'fields': ('indented_title',)}),
         ('Персональные данные', {'fields': ('name', 'title', 'birthdate', 'gender')}),
         ('Семейная связь', {'fields': ('parent', 'fid', 'mid', 'pids')}),
         ('Изображение', {'fields': ('img',), 'classes': ('collapse',)}),
     )
-
     readonly_fields = ('indented_title',)
+
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -56,8 +61,11 @@ class PersonAdminMixin:
                 raise ValidationError("Нельзя связать человека с самим собой.")
 
 
-class PersonAdmin(PersonAdminMixin, DraggableMPTTAdmin):
-    pass
+class PersonAdmin(PersonAdminMixin, DraggableMPTTAdmin, ImportExportModelAdmin):
+    resource_class = PersonResource
 
 
 admin.site.register(Person, PersonAdmin)
+admin.site.site_header = "Семейное древо"
+admin.site.unregister(Group)
+admin.site.unregister(User)
