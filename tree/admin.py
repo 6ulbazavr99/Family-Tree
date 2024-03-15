@@ -66,6 +66,6 @@ class PersonAdmin(PersonAdminMixin, DraggableMPTTAdmin, ImportExportModelAdmin):
 
 
 admin.site.register(Person, PersonAdmin)
-admin.site.site_header = "Семейное древо"
+admin.site.site_header = "Семейное Древо"
 admin.site.unregister(Group)
 admin.site.unregister(User)
