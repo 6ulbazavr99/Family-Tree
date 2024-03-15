@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config as env_config
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -30,8 +31,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'tree.middleware.Custom404Middleware',
     'django.middleware.security.SecurityMiddleware',
+    'tree.middleware.Custom404Middleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -40,12 +41,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
 ROOT_URLCONF = 'config.urls'
+
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -58,17 +61,26 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'config.wsgi.application'
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': env_config('POSTGRES_DB'),
+#         'USER': env_config('POSTGRES_USER'),
+#         'PASSWORD': env_config('POSTGRES_PASSWORD'),
+#         'HOST': env_config('POSTGRES_HOST'),
+#         'PORT': env_config('POSTGRES_PORT'),
+#     }
+# }
 
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env_config('POSTGRES_DB'),
-        'USER': env_config('POSTGRES_USER'),
-        'PASSWORD': env_config('POSTGRES_PASSWORD'),
-        'HOST': env_config('POSTGRES_HOST'),
-        'PORT': env_config('POSTGRES_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

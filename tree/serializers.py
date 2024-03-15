@@ -11,7 +11,7 @@ class TreeSerializer(serializers.ModelSerializer):
 
     def get_img(self, obj):
         if obj.img and obj.img.url:
-            return f"http://127.0.0.1:8000{obj.img.url}"
+            return obj.img.url
         return None
 
     def to_representation(self, instance):

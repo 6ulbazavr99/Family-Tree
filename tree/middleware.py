@@ -1,10 +1,13 @@
-from django.utils.deprecation import MiddlewareMixin
-from django.http import Http404
-from django.shortcuts import render
+from django.http import HttpResponseNotFound
+from django.template import loader
 
+class Custom404Middleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
 
-class Custom404Middleware(MiddlewareMixin):
-    def process_exception(self, request, exception):
-        if isinstance(exception, Http404):
-            return render(request, 'custom_404/custom_404.html', status=404)
-        return None
+    def __call__(self, request):
+        response = self.get_response(request)
+        if response.status_code == 404:
+            template = loader.get_template('404.html')
+            return HttpResponseNotFound(template.render({}, request=request))
+        return response

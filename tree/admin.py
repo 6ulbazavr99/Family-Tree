@@ -1,9 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.models import Group, User
-from django.db import transaction
+from mptt.admin import DraggableMPTTAdmin
+from .models import Person
 from django.core.exceptions import ValidationError
 from django import forms
-from .models import Person
 
 
 class PersonForm(forms.ModelForm):
@@ -19,23 +18,26 @@ class PersonForm(forms.ModelForm):
         return cleaned_data
 
 
-@admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
+class PersonAdminMixin:
     form = PersonForm
-    list_display = ('indented_title', 'name', 'title', 'parent', 'fid', 'mid', 'get_pids', 'birthdate', 'gender')
+    list_display = ('tree_actions', 'indented_title', 'name', 'title', 'birthdate', 'gender', 'get_pids', 'fid', 'mid')
     list_display_links = ('indented_title',)
     list_filter = ('parent', 'birthdate', 'gender')
     search_fields = ('name',)
 
     def indented_title(self, obj):
-        level = obj.level if obj.level is not None else 0
-        return '--> ' * level + str(obj)
+        parent_name = obj.parent.name if obj.parent else ''
+        if parent_name:
+            return f"{parent_name} --> {obj.name}"
+        else:
+            return obj.name
+
+    indented_title.short_description = 'Иерархия'
 
     def get_pids(self, obj):
         return ', '.join([str(pid) for pid in obj.pids.all()])
 
     get_pids.short_description = 'Партнеры'
-    indented_title.short_description = 'Иерархия'
 
     fieldsets = (
         ('Иерархия', {'fields': ('indented_title',)}),
@@ -45,10 +47,7 @@ class PersonAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = ('indented_title',)
-    verbose_name = 'Человек'
-    verbose_name_plural = 'Люди'
 
-    @transaction.atomic
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         if 'pids' in form.changed_data:
@@ -57,7 +56,8 @@ class PersonAdmin(admin.ModelAdmin):
                 raise ValidationError("Нельзя связать человека с самим собой.")
 
 
-admin.site.site_header = "Семейное древо"
-admin.site.site_title = "Администрирование Семейного древа"
-admin.site.unregister(Group)
-admin.site.unregister(User)
+class PersonAdmin(PersonAdminMixin, DraggableMPTTAdmin):
+    pass
+
+
+admin.site.register(Person, PersonAdmin)

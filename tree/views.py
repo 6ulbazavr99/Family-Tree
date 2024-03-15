@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Person
 from .serializers import TreeSerializer
-from rest_framework.views import exception_handler
 
 
 class TreeView(APIView):
@@ -18,17 +17,3 @@ class TreeView(APIView):
 
     def serialize_node(self, node):
         return TreeSerializer(node).data
-
-
-def custom_exception_handler(exc, context):
-    response = exception_handler(exc, context)
-
-    if response is not None:
-        custom_data = {
-            'error': 'Not found',
-            'message': 'The requested resource was not found'
-        }
-        response.data = custom_data
-        response.status_code = status.HTTP_404_NOT_FOUND
-
-    return response
