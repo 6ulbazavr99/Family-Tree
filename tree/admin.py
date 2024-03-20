@@ -1,11 +1,14 @@
 from django.contrib import admin
+from django.core.mail import EmailMessage
 from mptt.admin import DraggableMPTTAdmin
 from .models import Person
 from django.core.exceptions import ValidationError
 from django import forms
 from import_export.admin import ImportExportModelAdmin
 from .resources import PersonResource
-from django.contrib.auth.models import Group, User
+from import_export.admin import ExportActionMixin
+from import_export.formats.base_formats import XLSX
+from mptt.exceptions import InvalidMove
 
 
 class PersonForm(forms.ModelForm):
@@ -36,12 +39,11 @@ class PersonAdminMixin:
             return f"{arrow} {obj.name}"
         else:
             return obj.name
-    indented_title.short_description = 'Иерархия'
 
+    indented_title.short_description = 'Иерархия'
 
     def get_pids(self, obj):
         return ', '.join([str(pid) for pid in obj.pids.all()])
-
 
     get_pids.short_description = 'Партнеры'
     fieldsets = (
@@ -52,20 +54,58 @@ class PersonAdminMixin:
     )
     readonly_fields = ('indented_title',)
 
-
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if 'pids' in form.changed_data:
-            pids = obj.pids.all()
-            if obj in pids:
-                raise ValidationError("Нельзя связать человека с самим собой.")
+        try:
+            super().save_model(request, obj, form, change)
+        except InvalidMove as e:
+            self.message_user(request, f"Ошибка: {e}", level='ERROR')
+
+    def save_related(self, request, form, formsets, change):
+        try:
+            super().save_related(request, form, formsets, change)
+        except InvalidMove as e:
+            self.message_user(request, f"Ошибка: {e}", level='ERROR')
+
+
+class CustomExportActionMixin(ExportActionMixin):
+    def get_export_resource_class(self):
+        return PersonResource
+
+    def export_resource(self, queryset):
+        resource = self.get_export_resource_class()()
+        dataset = resource.export(queryset)
+        return dataset.xlsx
+
+
+def export_and_send_email(modeladmin, request, queryset):
+    exporter = CustomExportActionMixin()
+    try:
+        exported_data = exporter.export_resource(queryset)
+        admin_email = request.user.email
+        subject = 'Экспортированные данные'
+        message = 'Здесь находятся экспортированные данные.'
+        email_from = admin_email
+        recipient_list = [admin_email]
+        email = EmailMessage(subject, message, email_from, recipient_list)
+        email.attach('Persons.xlsx', exported_data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        email.send()
+    except Exception as e:
+        modeladmin.message_user(request, f"Ошибка при экспорте и отправке по почте: {e}", level='ERROR')
+
+
+export_and_send_email.short_description = "Экспорт и отправка по почте"
 
 
 class PersonAdmin(PersonAdminMixin, DraggableMPTTAdmin, ImportExportModelAdmin):
     resource_class = PersonResource
+    actions = [export_and_send_email]
+
+    def get_export_formats(self):
+        return [XLSX]
+
+    def get_import_formats(self):
+        return [XLSX]
 
 
 admin.site.register(Person, PersonAdmin)
 admin.site.site_header = "Семейное Древо"
-admin.site.unregister(Group)
-admin.site.unregister(User)

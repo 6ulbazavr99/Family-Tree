@@ -40,3 +40,4 @@ class Person(MPTTModel):
     class Meta:
         verbose_name = _("Человек")
         verbose_name_plural = _("Люди")
+
